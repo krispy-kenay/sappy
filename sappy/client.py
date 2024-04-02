@@ -15,6 +15,9 @@ class client:
         if login is not None: self.login(login)
     
     def _field_selector(self, query):
+        '''
+        Allows for shorter queries by adding frequently used path elements to search string
+        '''
         s = ''
         if 'wnd' not in query: s += 'wnd[0]/'
         if 'usr' not in query: s += 'usr/'
