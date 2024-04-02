@@ -14,6 +14,13 @@ class client:
         self.SapGuiAuto = None
         if login is not None: self.login(login)
     
+    def _field_selector(self, query):
+        s = ''
+        if 'wnd' not in query: s += 'wnd[0]/'
+        if 'usr' not in query: s += 'usr/'
+        s += query
+        return s
+    
     def login(self,
               sap_server:str,
               sap_path:str="C:\\Program Files (x86)\\SAP\\FrontEnd\\SAPgui\\saplogon.exe") -> None:
@@ -82,3 +89,18 @@ class client:
                 except: pass
             return result
         return search_elements(self.session, path)
+    
+    def update_field(self, field, value):
+        '''
+        Set field(s) to specified values.
+
+        Parameters:
+            field:              Id of the input field(s)
+            value:              Text to set on the input field(s)
+        '''
+        if isinstance(field, str): field = field.split()
+        if isinstance(value, str): value = value.split()
+        if len(field) != len(value): raise ValueError("Provide the same number of fields and values!")
+
+        for f, v in zip(field,value):
+            self.session.findById(self._field_selector(f)).text = v
