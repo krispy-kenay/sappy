@@ -60,3 +60,25 @@ class client:
             self.session.findById("wnd[0]").sendVKey(0)
         except Exception as e:
             raise ValueError(f"{transaction} could either not be found or there is a problem with the SAP connection, more details:\n{e}")
+
+    def find_elements(self, path):
+        '''
+        Recursively find all elements that contain the specified text/path.
+        Path of the elements can be accessed with element.Id and the text inside of the element with element.text
+
+        Parameters:
+            element:    The current element to search
+            path:       The path to search for
+        '''
+        def search_elements(element, path):
+            result = []
+            if hasattr(element, 'Children'):
+                try:
+                    for i in range(element.Children.Count):
+                        child = element.Children.ElementAt(i)
+                        if path in child.Id:
+                            result.append(child)
+                        result.extend(search_elements(child, path))
+                except: pass
+            return result
+        return search_elements(self.session, path)
