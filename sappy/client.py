@@ -14,7 +14,7 @@ class client:
         self.SapGuiAuto = None
         if login is not None: self.login(login)
     
-    def _field_selector(self, query):
+    def _field_selector(self, query:str) -> str:
         '''
         Allows for shorter queries by adding frequently used path elements to search string
         '''
@@ -61,7 +61,7 @@ class client:
         if self.application is not None: self.application = None
         if self.SapGuiAuto is not None: self.SapGuiAuto = None
 
-    def open_transaction(self, transaction):
+    def open_transaction(self, transaction:str) -> None:
         '''
         Open the specified transaction window
         '''
@@ -71,7 +71,7 @@ class client:
         except Exception as e:
             raise ValueError(f"{transaction} could either not be found or there is a problem with the SAP connection, more details:\n{e}")
     
-    def send_key(self, key:int|list|tuple|set, window:int=0):
+    def send_key(self, key:int|list|tuple|set, window:int=0)-> None:
         '''
         Send specified key(s) to the specified window
         '''
@@ -80,7 +80,7 @@ class client:
         for k in key:
             self.session.findById(f"wnd[{window}]").sendVKey(k)
 
-    def find_elements(self, path):
+    def find_elements(self, path:str) -> list[object]:
         '''
         Recursively find all elements that contain the specified text/path.
         Path of the elements can be accessed with element.Id and the text inside of the element with element.text
@@ -89,7 +89,10 @@ class client:
             element:    The current element to search
             path:       The path to search for
         '''
-        def search_elements(element, path):
+        def search_elements(element:object, path:str):
+            '''
+            The recursive part of the function, handled as a sub function for better wrapping
+            '''
             result = []
             if hasattr(element, 'Children'):
                 try:
@@ -102,7 +105,7 @@ class client:
             return result
         return search_elements(self.session, path)
     
-    def update_field(self, field, value):
+    def update_field(self, field:str|list|tuple|set, value:str|list|tuple|set) -> None:
         '''
         Set field(s) to specified values.
 
