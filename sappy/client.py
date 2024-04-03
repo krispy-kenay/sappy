@@ -70,6 +70,15 @@ class client:
             self.session.findById("wnd[0]").sendVKey(0)
         except Exception as e:
             raise ValueError(f"{transaction} could either not be found or there is a problem with the SAP connection, more details:\n{e}")
+    
+    def send_key(self, key:int|list|tuple|set, window:int=0):
+        '''
+        Send specified key(s) to the specified window
+        '''
+        if isinstance(key, int): key = [key]
+
+        for k in key:
+            self.session.findById(f"wnd[{window}]").sendVKey(k)
 
     def find_elements(self, path):
         '''
