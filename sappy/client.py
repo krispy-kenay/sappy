@@ -1,4 +1,5 @@
 import os
+import json
 import time
 import subprocess
 import win32com.client
@@ -51,6 +52,7 @@ class client:
 
         self.session = self.connection.Children(0)
         if not type(self.session) == win32com.client.CDispatch: raise ValueError("Could not attach to open connection to SAP server!")
+        self.open_transaction('/n')
    
     def logout(self) -> None:
         '''
@@ -66,8 +68,10 @@ class client:
         Open the specified transaction window
         '''
         try:
+            self.session.findById("wnd[0]/tbar[0]/okcd").text = f"/n"
+            self.send_key(0)
             self.session.findById("wnd[0]/tbar[0]/okcd").text = f"{transaction}"
-            self.session.findById("wnd[0]").sendVKey(0)
+            self.send_key(0)
         except Exception as e:
             raise ValueError(f"{transaction} could either not be found or there is a problem with the SAP connection, more details:\n{e}")
     
@@ -105,17 +109,42 @@ class client:
             return result
         return search_elements(self.session, path)
     
-    def update_field(self, field:str|list|tuple|set, value:str|list|tuple|set) -> None:
+    def update_field(self, path:str|list|tuple|set, value:str|list|tuple|set) -> None:
         '''
         Set field(s) to specified values.
 
         Parameters:
-            field:              Id of the input field(s)
+            path:               Id of the input field(s)
             value:              Text to set on the input field(s)
         '''
-        if isinstance(field, str): field = field.split()
+        if isinstance(path, str): path = path.split()
         if isinstance(value, str): value = value.split()
-        if len(field) != len(value): raise ValueError("Provide the same number of fields and values!")
+        if len(path) != len(value): raise ValueError("Provide the same number of fields and values!")
 
-        for f, v in zip(field,value):
+        for f, v in zip(path,value):
             self.session.findById(self._field_selector(f)).text = v
+    
+    def get_table(self, path:str) -> list:
+        '''
+        Return table in SAP as a list
+        '''
+        if not isinstance(path, str): raise ValueError("Provide path to table as a string!")
+        table = self.session.findById(path)
+        if not table.Type == 'GuiTableControl': raise TypeError("The element needs to be a 'GuiTableControl' type object! Check what type it is with element.Type")
+
+        l = []
+        # Get number of columns
+        columns = 0
+        while True:
+            try: table.GetCell(0,columns); columns += 1
+            except: break
+
+        # Get table data
+        for i in range(table.VisibleRowCount):
+            subl = []
+            for j in range(columns):
+                try:
+                    subl.append(table.GetCell(i,j).text)
+                except: pass
+            l.append(subl)
+        return l
