@@ -49,7 +49,7 @@ class Client:
         self.session = self.connection.Children(0)
         if not isinstance(self.session, win32com.client.CDispatch):
             raise ValueError("Could not attach to open connection to SAP server!")
-        self.open_transaction('/n')
+        self.close_transaction()
 
     def logout(self) -> None:
         '''
@@ -81,7 +81,7 @@ class Client:
         Close the currently open transaction window
         '''
         try:
-            self.session.findById("wnd[0]/tbar/okcd").text = "/n"
+            self.session.findById("wnd[0]/tbar[0]/okcd").text = "/n"
             self.send_key(0)
         except Exception as e:
             raise ValueError(f"Unable to close connection due to:\n{e}") from e
@@ -184,5 +184,3 @@ class Client:
                     pass
             li.append(subl)
         return li
-
-
