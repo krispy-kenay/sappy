@@ -16,18 +16,6 @@ class Client:
         if login is not None:
             self.login(login)
 
-    def _field_selector(self, query:str) -> str:
-        '''
-        Allows for shorter queries by adding frequently used path elements to search string
-        '''
-        s = ''
-        if 'wnd' not in query:
-            s += 'wnd[0]/'
-        if 'usr' not in query:
-            s += 'usr/'
-        s += query
-        return s
-
     def login(self,
               sap_server:str,
               sap_path:str="C:\\Program Files (x86)\\SAP\\FrontEnd\\SAPgui\\saplogon.exe") -> None:
@@ -102,10 +90,11 @@ class Client:
     def find_elements(self, idn:str) -> list[str]:
         '''
         Find all elements that contain the specified text/Id using the GetObjectTree method.
-        Returns 
 
         Parameters:
-            Id:       The Id to search for
+            Id:                 The Id to search for
+        Returns:
+            results:            List with paths to all matching elements
         '''
         object_tree = json.loads(self.session.GetObjectTree('wnd[0]/usr/'))
         def search_tree(tree):
@@ -117,31 +106,51 @@ class Client:
             return result
         return search_tree(object_tree)
 
-    def update_field(self, path:str|list|tuple|set, value:str|list|tuple|set) -> None:
+    def find_element(self, idn:str) -> object:
+        '''
+        Wrapper for find_elements where the search Id is expected to be unique.
+        This should make accessing elements by Id easier, since the entire path is no longer needed.
+
+        Parameters:
+            Id:                 The Id to search for
+        '''
+        elements = self.find_elements(idn)
+        if not elements:
+            raise ValueError(f"No element found with Id: {idn} in its path")
+        if len(elements) > 1:
+            raise ValueError(f"More than one element found with Id: {idn} in its path")
+        return self.session.findById(elements[0])
+
+    def update_field(self, idn:str|list|tuple|set, value:str|list|tuple|set) -> None:
         '''
         Set field(s) to specified values.
 
         Parameters:
-            path:               Id of the input field(s)
+            idn:                Id of the input field(s)
             value:              Text to set on the input field(s)
         '''
-        if isinstance(path, str):
-            path = path.split()
+        if isinstance(idn, str):
+            idn = idn.split()
         if isinstance(value, str):
             value = value.split()
-        if len(path) != len(value):
+        if len(idn) != len(value):
             raise ValueError("Provide the same number of fields and values!")
 
-        for f, v in zip(path,value):
-            self.session.findById(self._field_selector(f)).text = v
+        for f, v in zip(idn,value):
+            self.find_element(f).text = v
 
-    def get_table(self, path:str) -> list:
+    def get_table(self, idn:str) -> list:
         '''
-        Return table in SAP as a list
+        Return table in SAP as a list (only for GuiTableControl Types at the moment)
+
+        Parameters:
+            idn:                Id of the table
+        Returns:
+            lis:                List content in SAP
         '''
-        if not isinstance(path, str):
-            raise ValueError("Provide path to table as a string!")
-        table = self.session.findById(path)
+        if not isinstance(idn, str):
+            raise ValueError("Provide Id to table as a string!")
+        table = self.find_element(idn)
         if not table.Type == 'GuiTableControl':
             raise TypeError("The element needs to be a 'GuiTableControl' type object! Check what type it is with element.Type")
 
