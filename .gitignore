@@ -1,3 +1,2 @@
 # .gitignore
-__pycache__/
-sappy/__pycache__/
+**/__pycache__/
