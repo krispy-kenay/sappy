@@ -87,7 +87,7 @@ class Client:
             self.session.findById("wnd[0]/tbar[0]/okcd").text = f"{transaction}"
             self.send_key(0)
         except Exception as e:
-            raise ValueError(f"{transaction} could either not be found or there is a problem with the SAP connection, more details:\n{e}")
+            raise ValueError(f"{transaction} could either not be found or there is a problem with the SAP connection, more details:\n{e}") from e
 
     def send_key(self, key:int|list|tuple|set, window:int=0)-> None:
         '''
@@ -99,31 +99,23 @@ class Client:
         for k in key:
             self.session.findById(f"wnd[{window}]").sendVKey(k)
 
-    def find_elements(self, path:str) -> list[object]:
+    def find_elements(self, idn:str) -> list[str]:
         '''
-        Recursively find all elements that contain the specified text/path.
-        Path of the elements can be accessed with element.Id and the text inside of the element with element.text
+        Find all elements that contain the specified text/Id using the GetObjectTree method.
+        Returns 
 
         Parameters:
-            element:    The current element to search
-            path:       The path to search for
+            Id:       The Id to search for
         '''
-        def search_elements(element:object, path:str):
-            '''
-            The recursive part of the function, handled as a sub function for better wrapping
-            '''
+        object_tree = json.loads(self.session.GetObjectTree('wnd[0]/usr/'))
+        def search_tree(tree):
             result = []
-            if hasattr(element, 'Children'):
-                try:
-                    for i in range(element.Children.Count):
-                        child = element.Children.ElementAt(i)
-                        if path in child.Id:
-                            result.append(child)
-                        result.extend(search_elements(child, path))
-                except:
-                    pass
+            if idn in tree.get('properties',{}).get('Id',''):
+                result.append(tree['properties']['Id'])
+            for child in tree.get('children', []):
+                result.extend(search_tree(child))
             return result
-        return search_elements(self.session, path)
+        return search_tree(object_tree)
 
     def update_field(self, path:str|list|tuple|set, value:str|list|tuple|set) -> None:
         '''
@@ -160,7 +152,7 @@ class Client:
             try:
                 table.GetCell(0,columns)
                 columns += 1
-            except:
+            except Exception:
                 break
 
         # Get table data
@@ -169,7 +161,7 @@ class Client:
             for j in range(columns):
                 try:
                     subl.append(table.GetCell(i,j).text)
-                except:
+                except Exception:
                     pass
             li.append(subl)
         return li
