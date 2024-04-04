@@ -70,12 +70,21 @@ class Client:
         Open the specified transaction window
         '''
         try:
-            self.session.findById("wnd[0]/tbar[0]/okcd").text = "/n"
-            self.send_key(0)
+            self.close_transaction()
             self.session.findById("wnd[0]/tbar[0]/okcd").text = f"{transaction}"
             self.send_key(0)
         except Exception as e:
             raise ValueError(f"{transaction} could either not be found or there is a problem with the SAP connection, more details:\n{e}") from e
+
+    def close_transaction(self) -> None:
+        '''
+        Close the currently open transaction window
+        '''
+        try:
+            self.session.findById("wnd[0]/tbar/okcd").text = "/n"
+            self.send_key(0)
+        except Exception as e:
+            raise ValueError(f"Unable to close connection due to:\n{e}") from e
 
     def send_key(self, key:int|list|tuple|set, window:int=0)-> None:
         '''
@@ -96,7 +105,7 @@ class Client:
         Returns:
             results:            List with paths to all matching elements
         '''
-        object_tree = json.loads(self.session.GetObjectTree('wnd[0]/usr/'))
+        object_tree = json.loads(self.session.GetObjectTree('/app/con[0]/ses[0]/'))
         def search_tree(tree):
             result = []
             if idn in tree.get('properties',{}).get('Id',''):
@@ -106,18 +115,19 @@ class Client:
             return result
         return search_tree(object_tree)
 
-    def find_element(self, idn:str) -> object:
+    def find_element(self, idn:str, first_element:bool=False) -> object:
         '''
         Wrapper for find_elements where the search Id is expected to be unique.
         This should make accessing elements by Id easier, since the entire path is no longer needed.
 
         Parameters:
             Id:                 The Id to search for
+            first_element:      override if first item should be taken always (even if there are multiple)
         '''
         elements = self.find_elements(idn)
         if not elements:
             raise ValueError(f"No element found with Id: {idn} in its path")
-        if len(elements) > 1:
+        if len(elements) > 1 and not first_element:
             raise ValueError(f"More than one element found with Id: {idn} in its path")
         return self.session.findById(elements[0])
 
@@ -150,7 +160,7 @@ class Client:
         '''
         if not isinstance(idn, str):
             raise ValueError("Provide Id to table as a string!")
-        table = self.find_element(idn)
+        table = self.find_element(idn, first_element=True)
         if not table.Type == 'GuiTableControl':
             raise TypeError("The element needs to be a 'GuiTableControl' type object! Check what type it is with element.Type")
 
@@ -174,3 +184,5 @@ class Client:
                     pass
             li.append(subl)
         return li
+
+
