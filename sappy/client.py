@@ -161,26 +161,42 @@ class Client:
         if not isinstance(idn, str):
             raise ValueError("Provide Id to table as a string!")
         table = self.find_element(idn, first_element=True)
-        if not table.Type == 'GuiTableControl':
-            raise TypeError("The element needs to be a 'GuiTableControl' type object! Check what type it is with element.Type")
 
-        li = []
-        # Get number of columns
-        columns = 0
-        while True:
-            try:
-                table.GetCell(0,columns)
-                columns += 1
-            except Exception:
-                break
+        def GuiTableControl(element):
+            li = []
+            for row in range(element.RowCount):
+                l, column = [], 0
+                while True:
+                    try:
+                        l.append(element.GetCell(row, column).text)
+                    except: break
+                    column += 1
+                li.append(l)
+            return li
 
-        # Get table data
-        for i in range(table.VisibleRowCount):
-            subl = []
-            for j in range(columns):
-                try:
-                    subl.append(table.GetCell(i,j).text)
-                except Exception:
-                    pass
-            li.append(subl)
+        def GridViewCtrl(element):
+            li = []
+            for row in range(element.RowCount):
+                element.firstVisibleRow = str(row)
+                l = []
+                for column in element.ColumnOrder:
+                    try:
+                        element.firstVisibleColumn = column
+                        l.append(element.getcellvalue(row,column))
+                    except: pass
+                li.append(l)
+            return li
+
+        match table.Type:
+            case 'GuiTableControl':
+                li = GuiTableControl(table)
+            case 'GuiShell':
+                if 'GridViewCtrl' in table.Text:
+                    li = GridViewCtrl(table)
+                else:
+                    raise TypeError(f"{table.Text} type object is not supported!")
+            case _:
+                raise TypeError(f"{table.Type} type object is not supported!")
+
+        li = [l for l in li if l]
         return li
