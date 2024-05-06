@@ -1,3 +1,25 @@
 [build-system]
 requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
+
+[project]
+name = "sappy"
+version = "0.0.1"
+authors = [
+  { name="Yannick G.", email="study.gyannick@gmail.com" },
+]
+description = "Simple interface to access the SAP scripting engine via python with some helper functions"
+readme = "README.md"
+requires-python = ">=3.10"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Operating System :: Windows",
+]
+dependencies = [
+  "pywin32>=306"
+]
+
+[project.urls]
+"Homepage" = "https://github.com/krispy-kenay/sappy"
+"Bug Tracker" = "https://github.com/krispy-kenay/sappy/issues"
