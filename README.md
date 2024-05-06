@@ -6,6 +6,20 @@ Simple interface to access the SAP scripting engine via python with some helper 
 
 ## Usage
 
+### Installation
+
+The intended way to install this package is to download the latest version from [releases](https://github.com/krispy-kenay/vasp-analyzer/releases) and then use pip to install it:
+
+```bash
+pip install sappy-<version>.tar.gz
+```
+
+This package can also be directly installed from github using `pip`:
+
+```bash
+pip install git+https://github.com/krispy-kenay/sappy.git
+```
+
 ### Import
 Import the module like this:
 
