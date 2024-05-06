@@ -49,10 +49,23 @@ It might seem a bit unintuitive at first to get started, since finding the path 
 session.find_elements("")
 ```
 
-Returns a list containing all paths/ids of all the element in the current session. 
+Returns a list containing all paths/ids of all the elements in the current session. 
 
 From there it becomes much easier to find what you want. To filter/find what you want, remember that all elements contain a "short" description of what they are in their path/id:
 
 - `tbl...` Is a table that you can access using `get_table`
 - `ctxt...` Is an input field that you can set using `update_field`
 - `txt...` Is a regular text field, return the element using `find_element` and read it using `element.text`
+
+## Example
+This is a short example of how you would open a new session, then open a transaction, set a field (with id `EX1`) to "example text", press enter and finaly download a table from there.
+
+```python
+from sappy import Client
+
+with Client().new_session("Example Server") as session:
+    session.open_transaction("EX1")
+    session.update_field("ctxtINPT","example text")
+    session.send_key(0)
+    table = session.get_table("usr/tblSAPEX")
+```
